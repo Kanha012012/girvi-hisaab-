@@ -52,7 +52,9 @@ footer{padding:10px 4px;color:#5c6962;font-size:12px}
 <label>गिरवी सामान का विवरण</label><input name="item" placeholder="जैसे सोने की चेन, वजन">
 <div class="grid"><div><label>गिरवी की तारीख *</label><input name="date" type="date" required></div><div><label>खाते का नोट</label><input name="note"></div></div>
 <hr><h3>पहली रकम / एडवांस</h3>
-<div class="grid"><div><label>दी गई रकम (₹) *</label><input name="principal" type="number" min="1" step="0.01" required></div><div><label>रकम देने की तारीख *</label><input name="advanceDate" type="date" required></div></div>
+
+
+<div class="grid"><div><label>दी गई रकम (₹) *</label><input name="principal" type="number" min="1" step="0.01" required></div><div><label>पहली रकम की तारीख (गिरवी की तारीख के समान)</label><input name="advanceDate" type="date" required readonly></div></div>
 <div class="muted">नियम: ₹10,000 से कम पर 2.5% प्रति माह; ₹10,000 या अधिक पर 2% प्रति माह। यह दर पहली रकम के अनुसार तय होती है।</div>
 <button style="margin-top:14px" type="submit">खाता सेव करें</button>
 </form></div>
@@ -125,6 +127,9 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function showTab(tab){['home','add','backup','detail'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==tab));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('secondary',b.dataset.tab!==tab))}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 document.getElementById('search').addEventListener('input',render);
+  document.querySelector('#accountForm [name="date"]').addEventListener('change',e=>{
+ document.querySelector('#accountForm [name="advanceDate"]').value=e.target.value;
+});
 document.getElementById('customerForm').addEventListener('submit',e=>{
  e.preventDefault();const f=new FormData(e.target);const c={id:id(),name:f.get('name').trim(),relative:f.get('relative').trim(),phone:f.get('phone').trim(),address:f.get('address').trim(),createdAt:today()};
  db.customers.push(c);selectedCustomer=c.id;save();e.target.reset();document.getElementById('newAccountCard').classList.remove('hidden');document.getElementById('selectedCustomerLabel').textContent='ग्राहक: '+c.name;document.querySelector('#accountForm [name=date]').value=today();document.querySelector('#accountForm [name=advanceDate]').value=today();
