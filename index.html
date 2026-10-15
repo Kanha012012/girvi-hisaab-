@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173b32">
+<meta name="description" content="ऑफलाइन गिरवी हिसाब">
+<link rel="manifest" href="./manifest.json">
+<title>गिरवी हिसाब</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17211d;background:#f4f6f4}
+*{box-sizing:border-box}body{margin:0;padding:0 0 28px}header{background:#173b32;color:white;padding:20px 16px 16px;position:sticky;top:0;z-index:2}
+h1{font-size:23px;margin:0 0 5px}header p{margin:0;font-size:13px;opacity:.9}.wrap{max-width:760px;margin:auto;padding:12px}
+nav{display:flex;gap:7px;overflow:auto;margin:0 0 12px}nav button{white-space:nowrap}
+button,.btn{border:0;border-radius:10px;background:#173b32;color:white;padding:11px 13px;font-size:14px;font-weight:600;cursor:pointer}
+button.secondary{background:#e2e9e5;color:#173b32}button.danger{background:#a12b2b}button:disabled{opacity:.5}
+.card{background:white;border:1px solid #e1e7e2;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #00000008}
+h2{font-size:18px;margin:0 0 12px}h3{font-size:16px;margin:0 0 8px}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 5px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5ce;border-radius:9px;font-size:16px;background:white;color:#17211d}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.muted{color:#5c6962;font-size:13px}.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.amount{font-size:20px;font-weight:750}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#e2e9e5;font-size:12px}
+hr{border:0;border-top:1px solid #e7ece8;margin:12px 0}.hidden{display:none!important}.smallbtn{padding:7px 9px;font-size:12px}.account{border:1px solid #dce4de;border-radius:10px;padding:12px;margin-top:10px}
+footer{padding:10px 4px;color:#5c6962;font-size:12px}
+@media(max-width:440px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+@media print{header,nav,.no-print,footer{display:none!important}body{background:white}.wrap{padding:0}.card{box-shadow:none;border:1px solid #bbb;break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><h1>गिरवी हिसाब</h1><p>ऑफलाइन शुरुआती संस्करण • अपना डेटा नियमित बैकअप करें</p></header>
+<div class="wrap">
+<nav class="no-print">
+<button data-tab="home">डैशबोर्ड</button><button class="secondary" data-tab="add">ग्राहक जोड़ें</button><button class="secondary" data-tab="backup">बैकअप / सेटिंग</button>
+</nav>
+<section id="home">
+<div class="card"><div class="row"><div><div class="muted">कुल ग्राहक</div><div class="amount" id="customerCount">0</div></div><div><div class="muted">गिरवी खाते</div><div class="amount" id="accountCount">0</div></div></div></div>
+<div class="card"><label for="search">नाम / मोबाइल / ग्राहक नंबर से खोजें</label><input id="search" placeholder="जैसे: राम सिंह या 9876..." autocomplete="off"></div>
+<div id="customerList"></div>
+</section>
+<section id="add" class="hidden">
+<div class="card">
+<h2>नया ग्राहक</h2>
+<form id="customerForm">
+<label>ग्राहक का नाम *</label><input name="name" required>
+<div class="grid"><div><label>पिता / पति का नाम</label><input name="relative"></div><div><label>मोबाइल नंबर</label><input name="phone" inputmode="tel"></div></div>
+<label>पता</label><textarea name="address" rows="2"></textarea>
+<button style="margin-top:14px" type="submit">ग्राहक सेव करें</button>
+</form>
+</div>
+<div class="card hidden" id="newAccountCard">
+<h2>गिरवी खाता जोड़ें</h2><p class="muted" id="selectedCustomerLabel"></p>
+<form id="accountForm">
+<label>गिरवी सामान का विवरण</label><input name="item" placeholder="जैसे सोने की चेन, वजन">
+<div class="grid"><div><label>गिरवी की तारीख *</label><input name="date" type="date" required></div><div><label>खाते का नोट</label><input name="note"></div></div>
+<hr><h3>पहली रकम / एडवांस</h3>
+<div class="grid"><div><label>दी गई रकम (₹) *</label><input name="principal" type="number" min="1" step="0.01" required></div><div><label>रकम देने की तारीख *</label><input name="advanceDate" type="date" required></div></div>
+<div class="muted">नियम: ₹10,000 से कम पर 2.5% प्रति माह; ₹10,000 या अधिक पर 2% प्रति माह। यह दर पहली रकम के अनुसार तय होती है।</div>
+<button style="margin-top:14px" type="submit">खाता सेव करें</button>
+</form></div>
+</section>
+<section id="backup" class="hidden">
+<div class="card"><h2>डेटा बैकअप</h2><p>बैकअप फ़ाइल में ग्राहक और हिसाब का डेटा होगा। इसे किसी सुरक्षित जगह रखें; WhatsApp ग्रुप या सार्वजनिक जगह पर साझा न करें।</p>
+<button id="exportBtn">बैकअप डाउनलोड करें (JSON)</button>
+<label>बैकअप फ़ाइल से डेटा वापस लाएँ</label><input type="file" id="importFile" accept=".json,application/json">
+<button class="danger" id="clearBtn" style="margin-top:14px">सारा डेटा मिटाएँ</button>
+</div>
+<div class="card"><h2>जरूरी सुरक्षा सूचना</h2><p class="muted">यह शुरुआती संस्करण डेटा इसी ब्राउज़र में रखता है। यह अभी एन्क्रिप्टेड नहीं है और इसमें PIN/Face ID लॉक नहीं है। इसे केवल परीक्षण के लिए इस्तेमाल करें; वास्तविक ग्राहकों का संवेदनशील रिकॉर्ड तब तक न डालें जब तक एन्क्रिप्टेड स्टोरेज और बैकअप जोड़कर परीक्षण न हो जाए। Safari का इतिहास/वेबसाइट डेटा मिटाने पर रिकॉर्ड खो सकता है।</p></div>
+</section>
+<section id="detail" class="hidden"></section>
+<footer>महत्वपूर्ण: ब्याज और भुगतान के परिणामों को अपने वास्तविक नियमों/लेजर से मिलाकर जाँचें। यह संस्करण कानूनी या लेखा सत्यापन का विकल्प नहीं है।</footer>
+</div>
+<script>
+const KEY='girvi_hisaab_v1';
+let db={customers:[],accounts:[]}, selectedCustomer=null;
+const today=()=>new Date().toISOString().slice(0,10);
+function load(){try{const v=localStorage.getItem(KEY);if(v)db=JSON.parse(v)}catch(e){alert('डेटा पढ़ने में समस्या हुई। आगे कोई बदलाव करने से पहले बैकअप/तकनीकी सहायता लें।')}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function money(n){return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(n||0)}
+function dateFmt(s){if(!s)return '—';const [y,m,d]=s.split('-');return `${d}/${m}/${y}`}
+function rateFor(p){return Number(p)<10000?2.5:2}
+function daysBetween(a,b){return Math.max(0,Math.floor((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000))}
+function interestFor(t,asOf=today()){
+  // Approximation: 30-day months, simple interest between anniversaries; annual interest capitalized.
+  const start=t.date, end=asOf;if(end<start)return 0;
+  let principal=Number(t.principal), cursor=start, total=0, rate=Number(t.rate);
+  let anniversaries=0;
+  while(true){
+    const nextYear=new Date(cursor+'T12:00:00');nextYear.setFullYear(nextYear.getFullYear()+1);
+    const next=nextYear.toISOString().slice(0,10);
+    if(next>end)break;
+    const d=daysBetween(cursor,next);const intr=principal*rate/100*(d/30);
+    principal+=intr;total+=intr;cursor=next;anniversaries++;
+    if(anniversaries>100)break;
+  }
+  const d=daysBetween(cursor,end);total+=principal*rate/100*(d/30);
+  return total;
+}
+function trancheBalance(t,asOf=today()){
+  const paidInterest=(t.payments||[]).reduce((s,p)=>s+Number(p.toInterest||0),0);
+  const paidPrincipal=(t.payments||[]).reduce((s,p)=>s+Number(p.toPrincipal||0),0);
+  const interest=Math.max(0,interestFor(t,asOf)-paidInterest);
+  const principal=Math.max(0,Number(t.principal)-paidPrincipal);
+  return {principal,interest,total:principal+interest};
+}
+function customerName(cid){return db.customers.find(c=>c.id===cid)?.name||'अज्ञात ग्राहक'}
+function render(){
+ document.getElementById('customerCount').textContent=db.customers.length;
+ document.getElementById('accountCount').textContent=db.accounts.length;
+ const q=(document.getElementById('search')?.value||'').toLowerCase().trim();
+ const list=document.getElementById('customerList');
+ const cs=db.customers.filter(c=>[c.name,c.phone,c.id,c.relative].join(' ').toLowerCase().includes(q));
+ list.innerHTML=cs.map(c=>{
+  const ac=db.accounts.filter(a=>a.customerId===c.id);
+  return `<div class="card"><div class="row"><div><h3>${esc(c.name)}</h3><div class="muted">${esc(c.phone||'मोबाइल नहीं')} • ग्राहक नंबर ${esc(c.id.slice(-6).toUpperCase())}</div></div><button class="smallbtn" onclick="newAccount('${c.id}')">+ खाता</button></div>
+  <div class="muted">${esc(c.address||'')}</div>${ac.map(a=>accountHTML(a)).join('')||'<p class="muted">अभी कोई गिरवी खाता नहीं।</p>'}</div>`
+ }).join('')||'<div class="card muted">कोई ग्राहक नहीं मिला। “ग्राहक जोड़ें” से शुरू करें।</div>';
+}
+function accountHTML(a){
+ const tr=(a.tranches||[]).map(t=>trancheBalance(t)).reduce((s,b)=>({principal:s.principal+b.principal,interest:s.interest+b.interest,total:s.total+b.total}),{principal:0,interest:0,total:0});
+ return `<div class="account"><div class="row"><div><strong>${esc(a.item||'गिरवी खाता')}</strong><div class="muted">खाता ${esc(a.id.slice(-6).toUpperCase())} • ${dateFmt(a.date)}</div></div><span class="pill">${a.closed?'बंद':'चालू'}</span></div>
+ <div class="grid"><div><div class="muted">मूलधन*</div><strong>${money(tr.principal)}</strong></div><div><div class="muted">ब्याज*</div><strong>${money(tr.interest)}</strong></div><div class="full"><div class="muted">कुल बकाया*</div><div class="amount">${money(tr.total)}</div></div></div>
+ <div class="row no-print" style="margin-top:10px;flex-wrap:wrap"><button class="secondary smallbtn" onclick="openAccount('${a.id}')">विवरण / भुगतान</button><button class="secondary smallbtn" onclick="receipt('${a.id}')">रसीद / प्रिंट</button></div></div>`
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function showTab(tab){['home','add','backup','detail'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==tab));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('secondary',b.dataset.tab!==tab))}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('customerForm').addEventListener('submit',e=>{
+ e.preventDefault();const f=new FormData(e.target);const c={id:id(),name:f.get('name').trim(),relative:f.get('relative').trim(),phone:f.get('phone').trim(),address:f.get('address').trim(),createdAt:today()};
+ db.customers.push(c);selectedCustomer=c.id;save();e.target.reset();document.getElementById('newAccountCard').classList.remove('hidden');document.getElementById('selectedCustomerLabel').textContent='ग्राहक: '+c.name;document.querySelector('#accountForm [name=date]').value=today();document.querySelector('#accountForm [name=advanceDate]').value=today();
+});
+function newAccount(cid){selectedCustomer=cid;const c=db.customers.find(x=>x.id===cid);showTab('add');document.getElementById('newAccountCard').classList.remove('hidden');document.getElementById('selectedCustomerLabel').textContent='ग्राहक: '+c.name;document.querySelector('#accountForm [name=date]').value=today();document.querySelector('#accountForm [name=advanceDate]').value=today()}
+document.getElementById('accountForm').addEventListener('submit',e=>{
+ e.preventDefault();if(!selectedCustomer)return;const f=new FormData(e.target),p=Number(f.get('principal'));
+ const t={id:id(),date:f.get('advanceDate'),principal:p,rate:rateFor(p),payments:[]};
+ db.accounts.push({id:id(),customerId:selectedCustomer,item:f.get('item').trim(),date:f.get('date'),note:f.get('note').trim(),tranches:[t],closed:false,createdAt:today()});save();e.target.reset();document.getElementById('newAccountCard').classList.add('hidden');showTab('home');alert('खाता सेव हो गया।')}
+);
+function openAccount(aid){
+ const a=db.accounts.find(x=>x.id===aid);const c=db.customers.find(x=>x.id===a.customerId);
+ const tr=a.tranches.map(t=>{const b=trancheBalance(t);return `<div class="account"><strong>रकम ${money(t.principal)} • दर ${t.rate}% प्रति माह</strong><div class="muted">तारीख: ${dateFmt(t.date)}</div><p>मूलधन शेष: <b>${money(b.principal)}</b><br>ब्याज शेष: <b>${money(b.interest)}</b><br>कुल: <b>${money(b.total)}</b></p>
+ <div class="grid no-print"><div><label>नई रकम जोड़ें (₹)</label><input id="addp-${t.id}" type="number" min="1" placeholder="अलग एडवांस"></div><div><label>तारीख</label><input id="addd-${t.id}" type="date" value="${today()}"></div><div class="full"><button class="secondary" onclick="addTranche('${a.id}','${t.id}')">इस खाते में नई रकम जोड़ें</button></div>
+ <div><label>भुगतान ब्याज में (₹)</label><input id="payi-${t.id}" type="number" min="0" step=".01" value="0"></div><div><label>भुगतान मूलधन में (₹)</label><input id="payp-${t.id}" type="number" min="0" step=".01" value="0"></div><div><label>भुगतान की तारीख</label><input id="payd-${t.id}" type="date" value="${today()}"></div><div class="full"><button onclick="addPayment('${a.id}','${t.id}')">भुगतान दर्ज करें</button></div></div>
+ ${(t.payments||[]).map(p=>`<p class="muted">भुगतान ${dateFmt(p.date)}: ब्याज ${money(p.toInterest)}, मूलधन ${money(p.toPrincipal)}</p>`).join('')}</div>`}).join('');
+ const detail=document.getElementById('detail');detail.innerHTML=`<div class="card"><button class="secondary no-print" onclick="showTab('home')">← वापस</button><h2>${esc(c.name)}</h2><p>${esc(c.phone||'')}<br>${esc(c.address||'')}</p><h3>खाता ${a.id.slice(-6).toUpperCase()}</h3><p>${esc(a.item||'गिरवी सामान')} • तारीख ${dateFmt(a.date)}</p><div class="no-print"><label>अगली रकम (नया एडवांस) जोड़ने के लिए नीचे संबंधित किस्त का विकल्प इस्तेमाल करें।</label></div>${tr}<div class="no-print"><button class="secondary" onclick="toggleClosed('${a.id}')">${a.closed?'खाता फिर चालू करें':'खाता बंद करें'}</button></div><p class="muted">*यह शुरुआती गणना है; भुगतान और वार्षिक चक्रवृद्धि के लिए वास्तविक रिकॉर्ड से मिलान जरूरी है।</p></div>`;
+ showTab('detail');
+}
+function addTranche(aid,tid){const a=db.accounts.find(x=>x.id===aid),old=a.tranches.find(x=>x.id===tid);const p=Number(document.getElementById('addp-'+tid).value),d=document.getElementById('addd-'+tid).value;if(!(p>0&&d)){alert('रकम और तारीख भरें।');return}a.tranches.push({id:id(),date:d,principal:p,rate:rateFor(p),payments:[]});save();openAccount(aid)}
+function addPayment(aid,tid){const a=db.accounts.find(x=>x.id===aid),t=a.tranches.find(x=>x.id===tid);const i=Number(document.getElementById('payi-'+tid).value||0),p=Number(document.getElementById('payp-'+tid).value||0),d=document.getElementById('payd-'+tid).value;if(i<0||p<0||i+p<=0||!d){alert('भुगतान की तारीख और सही रकम भरें।');return}const b=trancheBalance(t,d);if(i>b.interest+0.01||p>b.principal+0.01){alert('भुगतान दर्ज की गई तारीख के हिसाब से बकाया से अधिक है। रकम जाँचें।');return}t.payments.push({id:id(),date:d,toInterest:i,toPrincipal:p,createdAt:new Date().toISOString()});save();openAccount(aid)}
+function toggleClosed(aid){const a=db.accounts.find(x=>x.id===aid);a.closed=!a.closed;save();openAccount(aid)}
+function receipt(aid){const a=db.accounts.find(x=>x.id===aid),c=db.customers.find(x=>x.id===a.customerId);let total={principal:0,interest:0,total:0};const rows=a.tranches.map(t=>{const b=trancheBalance(t);total.principal+=b.principal;total.interest+=b.interest;total.total+=b.total;return `<tr><td>${dateFmt(t.date)}</td><td>${money(t.principal)}</td><td>${t.rate}%</td><td>${money(b.interest)}</td><td>${money(b.total)}</td></tr>`}).join('');const w=window.open('','_blank');if(!w){alert('Safari में pop-up अनुमति की जरूरत हो सकती है।');return}w.document.write(`<html lang="hi"><meta charset="utf-8"><title>गिरवी हिसाब</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#17211d}table{border-collapse:collapse;width:100%}td,th{border:1px solid #aaa;padding:8px;text-align:left}h1{font-size:24px}</style><h1>गिरवी हिसाब — विवरण</h1><p>ग्राहक: ${esc(c.name)}<br>मोबाइल: ${esc(c.phone||'—')}<br>खाता नंबर: ${a.id.slice(-6).toUpperCase()}<br>गिरवी सामान: ${esc(a.item||'—')}</p><table><tr><th>रकम की तारीख</th><th>मूल रकम</th><th>दर/माह</th><th>ब्याज शेष*</th><th>कुल*</th></tr>${rows}</table><h3>मूलधन शेष: ${money(total.principal)}</h3><h3>ब्याज शेष: ${money(total.interest)}</h3><h2>कुल बकाया*: ${money(total.total)}</h2><p>*प्रारंभिक संस्करण की गणना; भुगतान की पूरी जाँच करें।</p><button onclick="window.print()">प्रिंट करें / PDF सेव करें</button></html>`);w.document.close()}
+document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),db},null,2)],{type:'application/json'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='girvi-backup-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+document.getElementById('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.db||!Array.isArray(data.db.customers)||!Array.isArray(data.db.accounts))throw Error();if(!confirm('मौजूदा डेटा बदलकर बैकअप लोड करना है? पहले वर्तमान डेटा का बैकअप लें।'))return;db=data.db;save();alert('बैकअप लोड हो गया।')}catch(err){alert('यह बैकअप फ़ाइल सही नहीं है।')}e.target.value=''};
+document.getElementById('clearBtn').onclick=()=>{if(confirm('सारा ग्राहक और हिसाब डेटा स्थायी रूप से मिटाना है? पहले बैकअप लें।')&&confirm('आखिरी पुष्टि: डेटा मिटा दें?')){db={customers:[],accounts:[]};save();alert('डेटा मिटा दिया गया।')}};
+load();render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>

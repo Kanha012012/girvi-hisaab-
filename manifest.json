@@ -1,0 +1,10 @@
+{
+  "name": "गिरवी हिसाब",
+  "short_name": "गिरवी हिसाब",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f4",
+  "theme_color": "#173b32",
+  "lang": "hi",
+  "icons": []
+}
